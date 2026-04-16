@@ -1,177 +1,136 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect } from 'react';
+import { HashRouter, NavLink, Route, Routes, Navigate } from 'react-router-dom';
+import { Home, ListChecks, Send, BarChart3, Settings as SettingsIcon } from 'lucide-react';
+import { PoolOverview } from './pages/PoolOverview';
+import { JobQueue } from './pages/JobQueue';
+import { SubmitJob } from './pages/SubmitJob';
+import { UsageLedger } from './pages/UsageLedger';
+import { Settings } from './pages/Settings';
+import { usePeers } from './hooks/usePeers';
+import { useJobs } from './hooks/useJobs';
+import { useIPC } from './hooks/useIPC';
+import { useStore } from './store';
+import { IPC } from '../shared/ipc-channels';
+import type { AppSettings, Group } from '../shared/types';
 
-type Device = {
-  id: string;
-  name: string;
-  model: string;
-  vramTotalGb: number;
-  vramUsedGb: number;
-  status: 'idle' | 'busy' | 'offline';
-  ip: string;
-};
-
-const DEVICES: Device[] = [
-  { id: '1', name: "blake's dgx spark", model: 'NVIDIA DGX Spark', vramTotalGb: 128, vramUsedGb: 14, status: 'idle', ip: '10.0.0.4' },
-  { id: '2', name: 'studio-mini', model: 'Apple M3 Ultra', vramTotalGb: 192, vramUsedGb: 88, status: 'busy', ip: '10.0.0.7' },
-  { id: '3', name: 'tower', model: 'NVIDIA RTX 4090', vramTotalGb: 24, vramUsedGb: 2, status: 'idle', ip: '10.0.0.12' },
-  { id: '4', name: "jen's spark", model: 'NVIDIA DGX Spark', vramTotalGb: 128, vramUsedGb: 0, status: 'idle', ip: '10.0.0.18' },
-  { id: '5', name: 'rack-01', model: 'NVIDIA H100', vramTotalGb: 80, vramUsedGb: 72, status: 'busy', ip: '10.0.0.22' },
-  { id: '6', name: 'macbook', model: 'Apple M2 Max', vramTotalGb: 64, vramUsedGb: 0, status: 'offline', ip: '10.0.0.31' },
+const NAV = [
+  { to: '/pool', label: 'Pool', icon: Home },
+  { to: '/jobs', label: 'Jobs', icon: ListChecks },
+  { to: '/submit', label: 'Submit', icon: Send },
+  { to: '/usage', label: 'Usage', icon: BarChart3 },
+  { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
-type ConnState = 'idle' | 'starting' | 'ready';
-
-function StatusDot({ status }: { status: Device['status'] }) {
-  const color =
-    status === 'idle' ? 'bg-emerald-400' : status === 'busy' ? 'bg-amber-400' : 'bg-neutral-600';
+function Sidebar() {
   return (
-    <span className="relative flex h-1.5 w-1.5">
-      {status === 'idle' && (
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-      )}
-      <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${color}`} />
-    </span>
+    <aside className="w-56 bg-slate-900 border-r border-slate-800 flex flex-col">
+      <div className="p-5 border-b border-slate-800">
+        <div className="text-sm font-semibold tracking-wide text-slate-100">
+          GPU Co-op
+        </div>
+        <div className="text-[11px] text-slate-500 mt-0.5">
+          Share GPUs with friends
+        </div>
+      </div>
+      <nav className="flex-1 p-2 space-y-1">
+        {NAV.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                isActive
+                  ? 'bg-slate-800 text-slate-100'
+                  : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+              }`
+            }
+          >
+            <Icon size={16} />
+            {label}
+          </NavLink>
+        ))}
+      </nav>
+      <StatusFooter />
+    </aside>
   );
 }
 
-function DeviceRow({ d }: { d: Device }) {
-  const freeGb = d.vramTotalGb - d.vramUsedGb;
-  const pct = (d.vramUsedGb / d.vramTotalGb) * 100;
-  const isOffline = d.status === 'offline';
-  const [conn, setConn] = useState<ConnState>('idle');
-  const [copied, setCopied] = useState(false);
-
-  const endpoint = `http://${d.ip}:11434`;
-
-  const connect = () => {
-    if (isOffline || conn !== 'idle') return;
-    setConn('starting');
-    setTimeout(() => setConn('ready'), 1100);
-  };
-
-  const copy = async () => {
-    await navigator.clipboard.writeText(endpoint);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
-  };
-
+function StatusFooter() {
+  const { appStatus, ollamaConnected } = useStore();
   return (
-    <div
-      className={`group border-b border-neutral-900 transition-colors ${
-        isOffline ? 'opacity-40' : 'hover:bg-neutral-900/40'
-      }`}
-    >
-      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-6 px-6 py-5">
-        <StatusDot status={d.status} />
-
-        <div className="min-w-0">
-          <div className="flex items-baseline gap-3">
-            <span className="text-[15px] text-neutral-100 tracking-tight truncate">{d.name}</span>
-            <span className="text-xs text-neutral-500 font-mono">{d.ip}</span>
-          </div>
-          <div className="mt-0.5 text-xs text-neutral-500">{d.model}</div>
-        </div>
-
-        <div className="flex items-center gap-5 min-w-[340px] justify-end">
-          <div className="w-24 h-[2px] bg-neutral-900 rounded-full overflow-hidden">
-            <div
-              className={`h-full transition-all ${
-                isOffline ? 'bg-neutral-700' : pct > 80 ? 'bg-amber-400' : 'bg-neutral-300'
-              }`}
-              style={{ width: `${isOffline ? 0 : pct}%` }}
-            />
-          </div>
-          <div className="text-right tabular-nums w-16">
-            <div className="text-[15px] text-neutral-100">
-              {isOffline ? '—' : `${freeGb} GB`}
-            </div>
-            <div className="text-[10px] text-neutral-600 uppercase tracking-widest">
-              {isOffline ? 'offline' : 'free'}
-            </div>
-          </div>
-
-          <button
-            onClick={connect}
-            disabled={isOffline || conn !== 'idle'}
-            className={`text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-full border transition-colors
-              ${
-                isOffline
-                  ? 'border-neutral-900 text-neutral-700 cursor-not-allowed'
-                  : conn === 'ready'
-                  ? 'border-emerald-900 text-emerald-400'
-                  : 'border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-neutral-100'
-              }`}
-          >
-            {conn === 'idle' && 'Connect'}
-            {conn === 'starting' && 'Starting…'}
-            {conn === 'ready' && '● Ready'}
-          </button>
-        </div>
+    <div className="p-4 border-t border-slate-800 text-[11px] text-slate-500 space-y-1">
+      <div className="flex items-center gap-2">
+        <span className={`w-1.5 h-1.5 rounded-full ${appStatus.daemonRunning ? 'bg-green-400' : 'bg-red-400'}`} />
+        Daemon {appStatus.daemonRunning ? 'running' : 'stopped'}
       </div>
-
-      {conn === 'ready' && (
-        <div className="px-6 pb-5 -mt-2 ml-[calc(1.5rem+6px+1.5rem)] animate-in fade-in">
-          <div className="flex items-center gap-3 text-[11px] font-mono">
-            <span className="text-neutral-600 uppercase tracking-widest text-[10px]">endpoint</span>
-            <code
-              onClick={copy}
-              className="text-neutral-200 bg-neutral-900 px-2.5 py-1 rounded cursor-pointer hover:bg-neutral-800 select-all"
-              title="click to copy"
-            >
-              {endpoint}
-            </code>
-            <span className={`text-[10px] uppercase tracking-widest transition-opacity ${copied ? 'text-emerald-400 opacity-100' : 'opacity-0'}`}>
-              copied
-            </span>
-          </div>
-          <div className="mt-2 text-[11px] text-neutral-600 font-mono">
-            ollama serve · llama3:8b · ready
-          </div>
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        <span className={`w-1.5 h-1.5 rounded-full ${ollamaConnected ? 'bg-green-400' : 'bg-slate-600'}`} />
+        Ollama {ollamaConnected ? 'connected' : 'offline'}
+      </div>
+      <div>
+        {appStatus.peersOnline} peer{appStatus.peersOnline === 1 ? '' : 's'} online
+      </div>
     </div>
   );
+}
+
+/** Runs once at mount — pulls initial state from daemon via IPC */
+function DaemonBootstrap() {
+  const { invoke } = useIPC();
+  const { setAppStatus, setSettings, setGroup, setOllamaConnected } = useStore();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const bootstrap = async () => {
+      try {
+        const [status, settings, group, ollama] = await Promise.all([
+          invoke<any>(IPC.APP_GET_STATUS).catch(() => null),
+          invoke<AppSettings>(IPC.SETTINGS_GET).catch(() => null),
+          invoke<Group>(IPC.GROUP_GET).catch(() => null),
+          invoke<{ connected: boolean }>(IPC.OLLAMA_STATUS).catch(() => null),
+        ]);
+        if (cancelled) return;
+        if (status) setAppStatus(status);
+        if (settings) setSettings(settings);
+        if (group) setGroup(group);
+        if (ollama) setOllamaConnected(ollama.connected);
+      } catch {
+        // daemon not ready
+      }
+    };
+
+    bootstrap();
+    const interval = setInterval(bootstrap, 5_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [invoke, setAppStatus, setSettings, setGroup, setOllamaConnected]);
+
+  // Subscribe to peer & job streams
+  usePeers();
+  useJobs();
+  return null;
 }
 
 export default function App() {
-  const [now] = useState(() => new Date());
-  const { online, totalFree, totalVram } = useMemo(() => {
-    const on = DEVICES.filter((d) => d.status !== 'offline');
-    return {
-      online: on.length,
-      totalFree: on.reduce((s, d) => s + (d.vramTotalGb - d.vramUsedGb), 0),
-      totalVram: on.reduce((s, d) => s + d.vramTotalGb, 0),
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans">
-      <div className="max-w-3xl mx-auto px-8 pt-16 pb-24">
-        <header className="flex items-end justify-between mb-14">
-          <div>
-            <h1 className="text-[13px] uppercase tracking-[0.2em] text-neutral-500">Devices</h1>
-            <p className="mt-2 text-2xl tracking-tight">Network</p>
-          </div>
-          <div className="text-right tabular-nums">
-            <div className="text-2xl tracking-tight">
-              {totalFree} <span className="text-neutral-600 text-base">/ {totalVram} GB</span>
-            </div>
-            <div className="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">
-              {online} online
-            </div>
-          </div>
-        </header>
-
-        <div className="border-t border-neutral-900">
-          {DEVICES.map((d) => (
-            <DeviceRow key={d.id} d={d} />
-          ))}
-        </div>
-
-        <footer className="mt-10 text-[11px] text-neutral-600 tabular-nums">
-          {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · gpu-coop
-        </footer>
+    <HashRouter>
+      <DaemonBootstrap />
+      <div className="flex h-screen bg-slate-950 text-slate-100">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">
+          <Routes>
+            <Route path="/" element={<Navigate to="/pool" replace />} />
+            <Route path="/pool" element={<PoolOverview />} />
+            <Route path="/jobs" element={<JobQueue />} />
+            <Route path="/submit" element={<SubmitJob />} />
+            <Route path="/usage" element={<UsageLedger />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </main>
       </div>
-    </div>
+    </HashRouter>
   );
 }

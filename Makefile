@@ -1,7 +1,7 @@
 # GPU Co-op — convenience Makefile
 # Run `make help` to see all targets.
 
-.PHONY: help install dev dev-nosandbox build typecheck clean ip proto mac win linux rebuild kill fix-sandbox
+.PHONY: help install dev dev-devtools dev-nosandbox build typecheck clean ip proto mac win linux rebuild kill fix-sandbox
 
 help:  ## Show this help
 	@echo "GPU Co-op — common tasks:"
@@ -15,6 +15,9 @@ install:  ## Install dependencies and rebuild native modules for Electron
 
 dev:  ## Start the app in dev mode (Vite + Electron + tsc --watch)
 	npm run dev
+
+dev-devtools:  ## Start dev mode with Chromium DevTools panel open
+	OPEN_DEVTOOLS=1 npm run dev
 
 dev-nosandbox:  ## Linux: start dev mode without Chromium sandbox (use if you hit chrome-sandbox errors)
 	ELECTRON_EXTRA_ARGS=--no-sandbox npm run dev
