@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { RefreshCw, Filter } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { useStore } from '../store';
 import { useJobs } from '../hooks/useJobs';
 import { JobRow } from '../components/JobRow';
-import type { Job } from '../../shared/types';
 
 type FilterType = 'all' | 'active' | 'completed' | 'failed';
+
+const FILTERS: FilterType[] = ['all', 'active', 'completed', 'failed'];
 
 export function JobQueue() {
   const { jobs } = useStore();
@@ -26,11 +27,12 @@ export function JobQueue() {
   );
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between animate-fade-up">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Job Queue</h1>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <h1 className="page-title">Job Queue</h1>
+          <p className="page-sub">
             {active.length} active · {jobs.length} total
           </p>
         </div>
@@ -41,16 +43,19 @@ export function JobQueue() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 bg-slate-800 border border-slate-700 p-1 rounded-lg w-fit">
-        {(['all', 'active', 'completed', 'failed'] as FilterType[]).map((f) => (
+      <div
+        className="inline-flex gap-0.5 p-1 rounded-lg animate-fade-up"
+        style={{ background: '#0d1117', border: '1px solid #21262d', animationDelay: '60ms' }}
+      >
+        {FILTERS.map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded text-sm font-medium capitalize transition-colors
-              ${filter === f
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-400 hover:text-slate-200'
-              }`}
+            className="px-4 py-1.5 rounded-md font-mono text-[11px] font-semibold capitalize transition-all duration-200"
+            style={{
+              background: filter === f ? '#58e6d9' : 'transparent',
+              color: filter === f ? '#06080d' : '#7d8590',
+            }}
           >
             {f}
           </button>
@@ -59,11 +64,19 @@ export function JobQueue() {
 
       {/* Job list */}
       {filtered.length === 0 ? (
-        <div className="card text-center py-10 text-slate-500">
-          <p>No jobs{filter !== 'all' ? ` in "${filter}"` : ''}</p>
+        <div
+          className="card text-center py-10 animate-fade-up"
+          style={{ animationDelay: '120ms' }}
+        >
+          <p className="font-mono text-sm" style={{ color: '#484f58' }}>
+            No jobs{filter !== 'all' ? ` in "${filter}"` : ''}
+          </p>
         </div>
       ) : (
-        <div className="card divide-y divide-slate-700/50 p-0 overflow-hidden">
+        <div
+          className="card p-0 overflow-hidden animate-fade-up"
+          style={{ animationDelay: '120ms' }}
+        >
           {filtered.map((job) => (
             <JobRow key={job.jobId} job={job} onRefresh={refresh} />
           ))}

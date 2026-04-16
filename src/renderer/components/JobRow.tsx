@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, RotateCcw, ChevronRight } from 'lucide-react';
+import { X, ChevronRight } from 'lucide-react';
 import type { Job } from '../../shared/types';
 import { useIPC } from '../hooks/useIPC';
 import { IPC } from '../../shared/ipc-channels';
@@ -16,6 +16,15 @@ const STATUS_BADGE: Record<Job['status'], string> = {
   failed: 'badge-red',
   preempted: 'badge-yellow',
   cancelled: 'badge-gray',
+};
+
+const STATUS_FILL: Record<Job['status'], string> = {
+  queued: '#484f58',
+  running: '#58a6ff',
+  completed: '#39d353',
+  failed: '#f85149',
+  preempted: '#e3b341',
+  cancelled: '#484f58',
 };
 
 export function JobRow({ job, onRefresh }: Props) {
@@ -36,36 +45,48 @@ export function JobRow({ job, onRefresh }: Props) {
   };
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 hover:bg-slate-700/50 rounded-lg transition-colors group">
-      {/* Status */}
-      <span className={`badge ${STATUS_BADGE[job.status]} capitalize w-20 justify-center`}>
+    <div
+      className="flex items-center gap-3 px-4 py-3.5 group transition-colors duration-150"
+      style={{ borderBottom: '1px solid rgba(33, 38, 45, 0.5)' }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(22, 27, 34, 0.5)')}
+      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+    >
+      {/* Status badge */}
+      <span className={`${STATUS_BADGE[job.status]} capitalize w-20 justify-center`}>
         {job.status}
       </span>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-200 truncate">
+          <span className="font-display text-sm font-semibold truncate" style={{ color: '#e6edf3' }}>
             {job.modelName ?? job.jobType}
           </span>
-          <span className="text-xs text-slate-500 capitalize">{job.jobType.replace('_', ' ')}</span>
+          <span className="font-mono text-[10px] capitalize" style={{ color: '#484f58' }}>
+            {job.jobType.replace('_', ' ')}
+          </span>
         </div>
         {job.inputSummary && (
-          <div className="text-xs text-slate-500 truncate">{job.inputSummary}</div>
+          <div className="font-mono text-[10px] truncate mt-0.5" style={{ color: '#484f58' }}>
+            {job.inputSummary}
+          </div>
         )}
-        {/* Progress bar for running jobs */}
         {job.status === 'running' && job.progress !== undefined && (
-          <div className="mt-1 w-full bg-slate-700 rounded-full h-1">
+          <div className="mt-2 w-full rounded-full h-[2px]" style={{ background: '#21262d' }}>
             <div
-              className="h-1 rounded-full bg-indigo-500 transition-all duration-500"
-              style={{ width: `${job.progress}%` }}
+              className="h-[2px] rounded-full transition-all duration-500"
+              style={{
+                width: `${job.progress}%`,
+                background: STATUS_FILL[job.status],
+                boxShadow: `0 0 6px rgba(88, 166, 255, 0.3)`,
+              }}
             />
           </div>
         )}
       </div>
 
       {/* Meta */}
-      <div className="hidden sm:flex items-center gap-4 text-xs text-slate-500 shrink-0">
+      <div className="hidden sm:flex items-center gap-4 font-mono text-[10px] shrink-0" style={{ color: '#484f58' }}>
         {job.inputCount && <span>{job.inputCount} prompts</span>}
         <span>{formatDuration()}</span>
         <span className="capitalize">{job.priority}</span>
@@ -78,7 +99,7 @@ export function JobRow({ job, onRefresh }: Props) {
             <X size={14} />
           </button>
         )}
-        <ChevronRight size={14} className="text-slate-600" />
+        <ChevronRight size={14} style={{ color: '#30363d' }} />
       </div>
     </div>
   );

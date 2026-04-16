@@ -8,10 +8,10 @@ interface Props {
 }
 
 const COLORS: Record<PeerStatus, string> = {
-  online: 'bg-green-400',
-  idle: 'bg-green-400',
-  busy: 'bg-yellow-400',
-  offline: 'bg-slate-500',
+  online: '#39d353',
+  idle: '#39d353',
+  busy: '#e3b341',
+  offline: '#484f58',
 };
 
 const LABELS: Record<PeerStatus, string> = {
@@ -21,22 +21,45 @@ const LABELS: Record<PeerStatus, string> = {
   offline: 'Offline',
 };
 
-const SIZES = {
-  sm: 'w-2 h-2',
-  md: 'w-2.5 h-2.5',
-  lg: 'w-3 h-3',
-};
+const DOT_SIZES = { sm: 6, md: 8, lg: 10 };
 
 export function StatusIndicator({ status, size = 'md', showLabel }: Props) {
+  const isActive = status !== 'offline';
+  const color = COLORS[status];
+  const dotSize = DOT_SIZES[size];
+  const wrapSize = dotSize + 10;
+
   return (
     <span className="inline-flex items-center gap-1.5">
       <span
-        className={`inline-block rounded-full ${SIZES[size]} ${COLORS[status]} ${
-          status !== 'offline' ? 'animate-pulse' : ''
-        }`}
-      />
+        className="relative inline-flex items-center justify-center shrink-0"
+        style={{ width: wrapSize, height: wrapSize }}
+      >
+        {isActive && (
+          <span
+            className="absolute animate-ping rounded-full"
+            style={{
+              width: dotSize + 6,
+              height: dotSize + 6,
+              background: color,
+              opacity: 0.15,
+            }}
+          />
+        )}
+        <span
+          className="relative rounded-full"
+          style={{
+            width: dotSize,
+            height: dotSize,
+            background: color,
+            boxShadow: isActive ? `0 0 8px ${color}` : 'none',
+          }}
+        />
+      </span>
       {showLabel && (
-        <span className="text-xs text-slate-400">{LABELS[status]}</span>
+        <span className="font-mono text-[10px] uppercase" style={{ color: '#7d8590' }}>
+          {LABELS[status]}
+        </span>
       )}
     </span>
   );

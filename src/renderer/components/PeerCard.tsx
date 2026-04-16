@@ -18,51 +18,63 @@ export function PeerCard({ peer, resource }: Props) {
   const isOffline = peer.status === 'offline';
 
   return (
-    <div className={`card transition-opacity ${isOffline ? 'opacity-50' : ''}`}>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
+    <div className={`card card-glow transition-all duration-300 ${isOffline ? 'opacity-35' : ''}`}>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-2.5">
           <StatusIndicator status={peer.status} size="md" />
           <div>
-            <div className="font-medium text-slate-100">
-              {peer.displayName}
-              {peer.isLocal && (
-                <span className="ml-2 badge badge-blue">You</span>
-              )}
+            <div className="flex items-center gap-2">
+              <span className="font-display text-sm font-semibold" style={{ color: '#e6edf3' }}>
+                {peer.displayName}
+              </span>
+              {peer.isLocal && <span className="badge badge-blue">LOCAL</span>}
             </div>
-            <div className="text-xs text-slate-500">
-              {peer.isLocal ? 'Local machine' : peer.endpoint ?? 'P2P'}
+            <div className="font-mono text-[10px] mt-0.5" style={{ color: '#484f58' }}>
+              {peer.isLocal ? 'this machine' : peer.endpoint ?? 'p2p tunnel'}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-slate-400">
+        <div className="flex items-center gap-1.5">
           {isOffline ? (
-            <WifiOff size={12} className="text-slate-500" />
+            <WifiOff size={11} style={{ color: '#484f58' }} />
           ) : (
-            <Wifi size={12} className="text-green-400" />
+            <Wifi size={11} style={{ color: '#39d353' }} />
           )}
-          <span className="capitalize">{peer.status}</span>
+          <span className="font-mono text-[9px] uppercase tracking-wider" style={{ color: '#7d8590' }}>
+            {peer.status}
+          </span>
         </div>
       </div>
 
-      {/* Hardware info */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="flex items-center gap-1.5 text-xs text-slate-400">
-          <Monitor size={12} />
-          <span className="truncate">{peer.gpuModel ?? '—'}</span>
+      {/* Hardware specs strip */}
+      <div
+        className="flex items-center gap-4 mb-4 py-2 px-3 rounded-lg"
+        style={{ background: '#0d1117', border: '1px solid #21262d' }}
+      >
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Monitor size={10} style={{ color: '#484f58', flexShrink: 0 }} />
+          <span className="font-mono text-[10px] truncate" style={{ color: '#7d8590' }}>
+            {peer.gpuModel ?? '—'}
+          </span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-slate-400">
-          <HardDrive size={12} />
-          <span>{formatGB(peer.totalVramMb)} VRAM</span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <HardDrive size={10} style={{ color: '#484f58' }} />
+          <span className="font-mono text-[10px]" style={{ color: '#7d8590' }}>
+            {formatGB(peer.totalVramMb)}
+          </span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-slate-400">
-          <Cpu size={12} />
-          <span>{peer.totalCpuCores ?? '—'} cores</span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Cpu size={10} style={{ color: '#484f58' }} />
+          <span className="font-mono text-[10px]" style={{ color: '#7d8590' }}>
+            {peer.totalCpuCores ?? '—'}c
+          </span>
         </div>
       </div>
 
-      {/* Resource bars (live) */}
+      {/* Live resource bars */}
       {resource && !isOffline && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <ResourceBar
             label="VRAM"
             used={resource.totalVramMb - resource.availableVramMb}
@@ -82,15 +94,15 @@ export function PeerCard({ peer, resource }: Props) {
               used={resource.gpuUtilizationPct}
               total={100}
               unit="%"
-              color="yellow"
+              color="amber"
             />
           )}
         </div>
       )}
 
       {isOffline && (
-        <div className="text-xs text-slate-500 text-center py-1">
-          Last seen:{' '}
+        <div className="font-mono text-[10px] text-center py-2" style={{ color: '#484f58' }}>
+          last seen:{' '}
           {peer.lastSeenAt
             ? new Date(peer.lastSeenAt).toLocaleString()
             : 'never'}
