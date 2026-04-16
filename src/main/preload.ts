@@ -1,5 +1,19 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC_EVENTS } from '../shared/ipc-channels';
+
+// Inlined to avoid requiring a local module in the sandboxed preload context.
+// Must stay in sync with IPC_EVENTS in src/shared/ipc-channels.ts.
+const VALID_EVENTS = new Set([
+  'peer:connected',
+  'peer:disconnected',
+  'peer:status-changed',
+  'job:status-changed',
+  'job:progress',
+  'job:completed',
+  'job:preempted',
+  'resource:updated',
+  'ollama:status-changed',
+  'daemon:status-changed',
+]);
 
 // Expose a safe bridge to the renderer
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -7,8 +21,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke(channel, ...args),
 
   on: (channel: string, callback: (...args: unknown[]) => void) => {
-    const validEvents = Object.values(IPC_EVENTS) as string[];
-    if (!validEvents.includes(channel)) {
+    if (!VALID_EVENTS.has(channel)) {
       console.warn(`[preload] Blocked unknown event channel: ${channel}`);
       return () => {};
     }

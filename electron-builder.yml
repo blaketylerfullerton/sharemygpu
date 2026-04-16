@@ -8,6 +8,7 @@ files:
   - dist/daemon/**/*
   - dist/renderer/**/*
   - dist/proto/**/*
+  - dist/shared/**/*
   - resources/**/*
   - node_modules/**/*
   - package.json
