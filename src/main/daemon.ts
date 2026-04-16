@@ -73,9 +73,9 @@ export class DaemonManager {
 
   private handleMessage(msg: unknown): void {
     const m = msg as { type?: string; requestId?: string; [k: string]: unknown };
-    if (!m?.type) return;
+    if (!m) return;
 
-    // Handle request/response pattern
+    // Handle request/response pattern (replies have requestId but no type)
     if (m.requestId && this.pendingRequests.has(m.requestId)) {
       const pending = this.pendingRequests.get(m.requestId)!;
       this.pendingRequests.delete(m.requestId);
@@ -86,6 +86,8 @@ export class DaemonManager {
       }
       return;
     }
+
+    if (!m.type) return;
 
     // Broadcast events to all renderer windows
     switch (m.type) {
