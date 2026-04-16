@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npm run build:ts && npm run copy:proto && concurrently \"npm run dev:vite\" \"npm run dev:electron\" \"npm run dev:ts-watch\"",
     "dev:vite": "vite",
-    "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .",
+    "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron . $ELECTRON_EXTRA_ARGS",
     "dev:ts-watch": "concurrently \"tsc -p tsconfig.main.json --watch --preserveWatchOutput\" \"tsc -p tsconfig.daemon.json --watch --preserveWatchOutput\"",
     "build": "npm run build:vite && npm run build:ts && npm run copy:proto",
     "build:vite": "vite build",
