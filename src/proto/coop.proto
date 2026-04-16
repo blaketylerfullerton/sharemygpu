@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package gpucoop;
+
+// ─── Resource Advertising ────────────────────────────────────────────────────
+
+message ResourceStatus {
+  string peer_id = 1;
+  string gpu_model = 2;
+  int32 total_vram_mb = 3;
+  int32 available_vram_mb = 4;
+  int32 total_ram_mb = 5;
+  int32 available_ram_mb = 6;
+  int32 total_cpu_cores = 7;
+  int32 idle_cpu_cores = 8;
+  OwnerActivity activity = 9;
+  int64 timestamp = 10;
+  int32 gpu_utilization_pct = 11;
+}
+
+enum OwnerActivity {
+  IDLE = 0;
+  LIGHT_USE = 1;
+  HEAVY_USE = 2;
+  DO_NOT_DISTURB = 3;
+}
+
+// ─── Job Management ──────────────────────────────────────────────────────────
+
+message Job {
+  string job_id = 1;
+  string submitter_peer_id = 2;
+  JobType type = 3;
+  string model_name = 4;
+  repeated string input_refs = 5;
+  JobPriority priority = 6;
+  int64 submitted_at = 7;
+}
+
+enum JobType {
+  LLM_BATCH_INFERENCE = 0;
+  LLM_SINGLE_INFERENCE = 1;
+  CUSTOM_CONTAINER = 2;
+}
+
+enum JobPriority {
+  LOW = 0;
+  NORMAL = 1;
+  HIGH = 2;
+}
+
+message JobResult {
+  string job_id = 1;
+  JobStatus status = 2;
+  string output_ref = 3;
+  string error_message = 4;
+  int64 gpu_seconds_used = 5;
+  int64 completed_at = 6;
+}
+
+enum JobStatus {
+  QUEUED = 0;
+  RUNNING = 1;
+  COMPLETED = 2;
+  FAILED = 3;
+  PREEMPTED = 4;
+  CANCELLED = 5;
+}
+
+// ─── Data Transfer ───────────────────────────────────────────────────────────
+
+message DataChunk {
+  string transfer_id = 1;
+  bytes data = 2;
+  int64 offset = 3;
+  int64 total_size = 4;
+}
+
+message TransferAck {
+  string transfer_id = 1;
+  bool success = 2;
+  string error_message = 3;
+}
+
+// ─── Request/Response ────────────────────────────────────────────────────────
+
+message CancelRequest { string job_id = 1; }
+message JobStatusRequest { string job_id = 1; }
+message PingRequest { int64 timestamp = 1; string peer_id = 2; }
+message PingResponse { int64 timestamp = 1; string peer_id = 2; int64 latency_ms = 3; }
+
+// ─── Service ─────────────────────────────────────────────────────────────────
+
+service CoopService {
+  // Bidirectional resource status stream
+  rpc ResourceStream (stream ResourceStatus) returns (stream ResourceStatus);
+
+  // Job lifecycle
+  rpc SubmitJob (Job) returns (JobResult);
+  rpc CancelJob (CancelRequest) returns (JobResult);
+  rpc GetJobStatus (JobStatusRequest) returns (JobResult);
+
+  // Health
+  rpc Ping (PingRequest) returns (PingResponse);
+
+  // Data transfer
+  rpc TransferData (stream DataChunk) returns (TransferAck);
+}

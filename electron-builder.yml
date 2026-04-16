@@ -1,0 +1,32 @@
+appId: com.gpucoop.app
+productName: GPU Co-op
+directories:
+  output: dist/release
+  buildResources: resources
+files:
+  - dist/main/**/*
+  - dist/daemon/**/*
+  - dist/renderer/**/*
+  - dist/proto/**/*
+  - resources/**/*
+  - node_modules/**/*
+  - package.json
+extraMetadata:
+  main: dist/main/index.js
+mac:
+  category: public.app-categories.utilities
+  target:
+    - dmg
+    - zip
+  hardenedRuntime: true
+  icon: resources/icon.png
+win:
+  target:
+    - nsis
+  icon: resources/icon.png
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Utility
+  icon: resources/icon.png
