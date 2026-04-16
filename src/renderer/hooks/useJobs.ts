@@ -26,7 +26,7 @@ export function useJobs() {
     } catch {
       // Daemon not ready yet
     }
-  }, [invoke, setJobs, setAppStatus]);
+  }, [setJobs, setAppStatus]);
 
   useEffect(() => {
     refresh();

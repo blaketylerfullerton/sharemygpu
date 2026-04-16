@@ -36,7 +36,7 @@ export function UsageLedger() {
       if (history) setChartData(history);
     };
     load();
-  }, [invoke, setUsageSummary]);
+  }, [setUsageSummary]);
 
   return (
     <div className="p-6 space-y-6">

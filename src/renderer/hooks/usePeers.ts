@@ -31,7 +31,7 @@ export function usePeers() {
     } catch {
       // Daemon not ready yet
     }
-  }, [invoke, setPeers, setLocalResource, updatePeerResource]);
+  }, [setPeers, setLocalResource, updatePeerResource]);
 
   useEffect(() => {
     refresh();

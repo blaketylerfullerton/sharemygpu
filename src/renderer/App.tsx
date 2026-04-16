@@ -106,7 +106,7 @@ function DaemonBootstrap() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [invoke, setAppStatus, setSettings, setGroup, setOllamaConnected]);
+  }, [setAppStatus, setSettings, setGroup, setOllamaConnected]);
 
   // Subscribe to peer & job streams
   usePeers();

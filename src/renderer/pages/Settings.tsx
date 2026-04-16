@@ -23,7 +23,7 @@ export function Settings() {
     invoke<string>(IPC.GROUP_GET_INVITE_CODE).then((code) => {
       if (code) setInviteCode(code);
     });
-  }, [invoke, setSettings]);
+  }, [setSettings]);
 
   const save = async () => {
     await invoke(IPC.SETTINGS_UPDATE, local);
