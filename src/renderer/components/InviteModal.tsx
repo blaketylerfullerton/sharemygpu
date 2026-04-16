@@ -9,6 +9,24 @@ interface Props {
   onClose: () => void;
 }
 
+function parseConnectError(raw: string): string {
+  if (raw.includes('DEADLINE_EXCEEDED') || raw.includes('timed out')) {
+    return 'Connection timed out — the remote machine may not be running GPU Co-op, or a firewall is blocking the connection.';
+  }
+  if (raw.includes('ECONNREFUSED') || raw.includes('Connection refused')) {
+    return 'Connection refused — the machine is reachable but GPU Co-op doesn\'t appear to be listening on that port.';
+  }
+  if (raw.includes('EHOSTUNREACH') || raw.includes('unreachable')) {
+    return 'Host unreachable — check that both machines are on the same network.';
+  }
+  if (raw.includes('Cannot connect to yourself')) {
+    return 'That\'s your own address! Enter the other machine\'s IP.';
+  }
+  // Strip nested "Error: Error:" wrappers from IPC relay
+  const cleaned = raw.replace(/^(Error:\s*)+/i, '').trim();
+  return cleaned || 'Connection failed — check the address and try again.';
+}
+
 type Mode = 'choose' | 'create' | 'join' | 'direct';
 
 export function InviteModal({ onClose }: Props) {
@@ -91,8 +109,8 @@ export function InviteModal({ onClose }: Props) {
         setError('Failed to connect — no response');
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(`Failed to connect: ${msg}`);
+      const raw = e instanceof Error ? e.message : String(e);
+      setError(parseConnectError(raw));
     } finally {
       setLoading(false);
     }
@@ -249,7 +267,16 @@ export function InviteModal({ onClose }: Props) {
               Tip: both machines must have the app running. The first connection
               may trigger a firewall prompt — allow incoming connections.
             </p>
-            {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+            {error && (
+              <div className="mb-3 p-3 rounded-lg bg-red-900/30 border border-red-800">
+                <p className="text-red-300 text-sm font-medium mb-1.5">{error}</p>
+                <ul className="text-xs text-red-400/80 space-y-0.5 list-disc list-inside">
+                  <li>Both machines must have GPU Co-op running</li>
+                  <li>Allow incoming connections if a firewall prompt appears</li>
+                  <li>Verify both machines are on the same local network</li>
+                </ul>
+              </div>
+            )}
             {success && <p className="text-green-400 text-sm mb-3">{success}</p>}
             <div className="flex gap-2">
               <button

@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import net from 'net';
 import {
   HEALTH_CHECK_INTERVAL_MS,
   HEALTH_CHECK_MAX_FAILURES,
@@ -107,26 +108,36 @@ export class PeerManager extends EventEmitter {
 
   /**
    * Connect to a peer by LAN address (e.g. "192.168.1.42:50051").
-   * Pings first to verify connectivity, then starts a resource stream.
+   * Checks TCP reachability first, then pings via gRPC to verify the service.
    */
   async connectToPeer(address: string): Promise<{ peerId: string; latencyMs: number }> {
-    // Normalize: add default port if missing
     if (!address.includes(':')) {
       address = `${address}:50051`;
     }
 
-    // Check if we already have a client connected to this address
     for (const [peerId, client] of this.grpcClients) {
       if (client.getAddress() === address && client.isConnected()) {
         return { peerId, latencyMs: 0 };
       }
     }
 
+    const [host, portStr] = address.split(':');
+    const port = parseInt(portStr, 10);
+
+    // Quick TCP check to give a faster, more specific error
+    await this.checkTcpReachable(host, port);
+
     const client = new GrpcClient(address, this.localPeerId);
     client.connect();
 
-    // Ping to verify connectivity and get remote peer ID
-    const { peerId: remotePeerId, latencyMs } = await client.ping();
+    let remotePeerId: string;
+    let latencyMs: number;
+    try {
+      ({ peerId: remotePeerId, latencyMs } = await client.ping());
+    } catch (err: any) {
+      client.disconnect();
+      throw new Error(this.friendlyConnectError(err, address));
+    }
 
     if (remotePeerId === this.localPeerId) {
       client.disconnect();
@@ -237,7 +248,7 @@ export class PeerManager extends EventEmitter {
   private async checkHealth(): Promise<void> {
     for (const [peerId, client] of this.grpcClients) {
       try {
-        await client.ping();
+        await client.ping(5000);
         this.failCounts.set(peerId, 0);
         updatePeerStatus(peerId, this.peerResources.has(peerId) ? 'online' : 'idle');
       } catch {
@@ -252,5 +263,69 @@ export class PeerManager extends EventEmitter {
         }
       }
     }
+  }
+
+  /** Fast TCP probe — fails quickly with a clear message if the host/port is unreachable. */
+  private checkTcpReachable(host: string, port: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const socket = new net.Socket();
+      const timeoutMs = 4000;
+
+      socket.setTimeout(timeoutMs);
+
+      socket.on('connect', () => {
+        socket.destroy();
+        resolve();
+      });
+
+      socket.on('timeout', () => {
+        socket.destroy();
+        reject(new Error(
+          `Could not reach ${host}:${port} — connection timed out. ` +
+          `Make sure GPU Co-op is running on that machine and the firewall allows incoming connections on port ${port}.`
+        ));
+      });
+
+      socket.on('error', (err: NodeJS.ErrnoException) => {
+        socket.destroy();
+        if (err.code === 'ECONNREFUSED') {
+          reject(new Error(
+            `Connection refused by ${host}:${port}. ` +
+            `The machine is reachable but GPU Co-op doesn't appear to be running on port ${port}.`
+          ));
+        } else if (err.code === 'EHOSTUNREACH' || err.code === 'ENETUNREACH') {
+          reject(new Error(
+            `Host ${host} is unreachable. Check that both machines are on the same network.`
+          ));
+        } else {
+          reject(new Error(
+            `Could not connect to ${host}:${port} (${err.code ?? err.message}). ` +
+            `Verify the IP address and that GPU Co-op is running on that machine.`
+          ));
+        }
+      });
+
+      socket.connect(port, host);
+    });
+  }
+
+  /** Translate raw gRPC errors into actionable messages. */
+  private friendlyConnectError(err: any, address: string): string {
+    const code = err?.code;
+    const msg = err?.message ?? String(err);
+
+    if (code === 4 || msg.includes('DEADLINE_EXCEEDED')) {
+      return (
+        `Connection to ${address} timed out. ` +
+        `The remote machine may not be running GPU Co-op, or a firewall is blocking port ${address.split(':')[1] ?? '50051'}.`
+      );
+    }
+    if (code === 14 || msg.includes('UNAVAILABLE')) {
+      return `Could not reach GPU Co-op at ${address}. Is the app running on that machine?`;
+    }
+    if (code === 13 || msg.includes('INTERNAL')) {
+      return `The peer at ${address} returned an internal error. It may be running an incompatible version.`;
+    }
+    return `Connection to ${address} failed: ${msg}`;
   }
 }

@@ -71,14 +71,14 @@ export class GrpcClient extends EventEmitter {
     return this.address;
   }
 
-  async ping(): Promise<{ peerId: string; latencyMs: number }> {
+  async ping(timeoutMs = 10_000): Promise<{ peerId: string; latencyMs: number }> {
     if (!this.client) throw new Error('Not connected');
 
     return new Promise((resolve, reject) => {
       const start = Date.now();
       this.client.Ping(
         { timestamp: start, peerId: this.localPeerId },
-        { deadline: new Date(Date.now() + 5000) },
+        { deadline: new Date(Date.now() + timeoutMs) },
         (err: any, response: any) => {
           if (err) {
             reject(err);
