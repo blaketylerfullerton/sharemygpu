@@ -45,8 +45,11 @@ rebuild:  ## Rebuild better-sqlite3 for Electron (fix native module mismatch)
 
 ip:  ## Print this machine's LAN IPs (share these with peers for LAN connect)
 	@echo "Your LAN IPs (other machine should connect to one of these on :50051):"
-	@ifconfig 2>/dev/null | grep -E 'inet (192\.168|10\.|172\.)' | awk '{print "  " $$2 ":50051"}' || \
-		ipconfig 2>/dev/null | grep -E 'IPv4 Address' | awk -F: '{print "  " $$2 ":50051"}'
+	@{ \
+	  hostname -I 2>/dev/null | tr ' ' '\n' | grep -E '^[0-9]+\.' | grep -v '^127\.'; \
+	  ip addr show 2>/dev/null | grep 'inet ' | awk '{print $$2}' | sed 's|/.*||' | grep -v '^127\.'; \
+	  ifconfig 2>/dev/null | grep 'inet ' | awk '{print $$2}' | grep -v '^127\.'; \
+	} | sort -u | awk '{print "  " $$1 ":50051"}'
 
 kill:  ## Kill any stuck electron/daemon processes (useful if dev hangs)
 	@pkill -f "electron" 2>/dev/null || true
