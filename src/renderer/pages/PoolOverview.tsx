@@ -13,24 +13,21 @@ function formatGB(mb: number | undefined): string {
 interface StatCardProps {
   value: string;
   label: string;
-  color: string;
-  glow: string;
   delay: number;
 }
 
-function StatCard({ value, label, color, glow, delay }: StatCardProps) {
+function StatCard({ value, label, delay }: StatCardProps) {
   return (
     <div
-      className="card card-glow animate-fade-up"
+      className="card card-hover animate-fade-up"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div
-        className="text-3xl font-display font-bold"
-        style={{ color, textShadow: `0 0 20px ${glow}` }}
+        style={{ fontSize: 28, fontWeight: 600, color: '#fafafa', letterSpacing: '-0.02em', lineHeight: 1 }}
       >
         {value}
       </div>
-      <div className="font-mono text-[9px] tracking-[0.14em] mt-2 uppercase" style={{ color: '#484f58' }}>
+      <div style={{ fontSize: 11, color: '#71717a', marginTop: 8, fontWeight: 500 }}>
         {label}
       </div>
     </div>
@@ -68,34 +65,10 @@ export function PoolOverview() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          value={String(onlinePeers.length)}
-          label="Machines Online"
-          color="#39d353"
-          glow="rgba(57, 211, 83, 0.15)"
-          delay={60}
-        />
-        <StatCard
-          value={formatGB(totalVram)}
-          label="Total VRAM"
-          color="#58e6d9"
-          glow="rgba(88, 230, 217, 0.15)"
-          delay={120}
-        />
-        <StatCard
-          value={formatGB(availableVram)}
-          label="Available VRAM"
-          color="#58a6ff"
-          glow="rgba(88, 166, 255, 0.15)"
-          delay={180}
-        />
-        <StatCard
-          value={String(totalCores)}
-          label="CPU Cores"
-          color="#e3b341"
-          glow="rgba(227, 179, 65, 0.15)"
-          delay={240}
-        />
+        <StatCard value={String(onlinePeers.length)} label="Machines Online"  delay={60} />
+        <StatCard value={formatGB(totalVram)}        label="Total VRAM"       delay={120} />
+        <StatCard value={formatGB(availableVram)}    label="Available VRAM"   delay={180} />
+        <StatCard value={String(totalCores)}         label="CPU Cores"        delay={240} />
       </div>
 
       {/* Peer grid */}
@@ -105,12 +78,12 @@ export function PoolOverview() {
             size={48}
             className="mx-auto mb-4"
             strokeWidth={1}
-            style={{ color: '#21262d' }}
+            style={{ color: '#27272a' }}
           />
-          <p className="font-display text-lg font-semibold" style={{ color: '#7d8590' }}>
+          <p className="text-lg font-semibold" style={{ color: '#a1a1aa' }}>
             No machines in pool
           </p>
-          <p className="text-sm mt-2 max-w-xs mx-auto" style={{ color: '#484f58' }}>
+          <p className="text-sm mt-2 max-w-xs mx-auto" style={{ color: '#71717a' }}>
             Create or join a group to start sharing compute with friends.
           </p>
           <button onClick={() => setShowInvite(true)} className="btn-primary mt-6">

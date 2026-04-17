@@ -4,53 +4,55 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // shadcn zinc dark
         coop: {
-          void: '#06080d',
-          deep: '#0d1117',
-          surface: '#161b22',
-          elevated: '#1c2128',
-          overlay: '#21262d',
-          accent: '#58e6d9',
-          green: '#39d353',
-          amber: '#e3b341',
-          red: '#f85149',
-          blue: '#58a6ff',
+          void:     '#09090b',
+          deep:     '#09090b',
+          surface:  '#18181b',
+          elevated: '#27272a',
+          overlay:  '#3f3f46',
+          accent:   '#fafafa',
+          green:    '#4ade80',
+          amber:    '#facc15',
+          red:      '#f87171',
+          blue:     '#60a5fa',
         },
         tx: {
-          primary: '#e6edf3',
-          secondary: '#7d8590',
-          tertiary: '#484f58',
+          primary:   '#fafafa',
+          secondary: '#a1a1aa',
+          tertiary:  '#71717a',
         },
         bd: {
-          DEFAULT: '#21262d',
-          muted: '#30363d',
+          DEFAULT: '#27272a',
+          muted:   '#3f3f46',
         },
       },
       fontFamily: {
-        display: ['"Chakra Petch"', 'sans-serif'],
-        body: ['"Manrope"', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        display: ['"Geist"', 'system-ui', 'sans-serif'],
+        body:    ['"Geist"', 'system-ui', 'sans-serif'],
+        mono:    ['"Geist Mono"', 'ui-monospace', 'monospace'],
+      },
+      borderRadius: {
+        DEFAULT: '0.5rem',
       },
       boxShadow: {
-        glow: '0 0 20px rgba(88, 230, 217, 0.15)',
-        'glow-lg': '0 0 40px rgba(88, 230, 217, 0.2)',
-        'glow-green': '0 0 10px rgba(57, 211, 83, 0.25)',
-        'glow-red': '0 0 10px rgba(248, 81, 73, 0.25)',
-        'glow-amber': '0 0 10px rgba(227, 179, 65, 0.25)',
+        // subtle shadows only — no colored glows
+        card: '0 1px 3px rgba(0,0,0,0.4)',
+        'card-lg': '0 4px 16px rgba(0,0,0,0.5)',
       },
       keyframes: {
         'fade-up': {
-          from: { opacity: '0', transform: 'translateY(12px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to:   { opacity: '1', transform: 'translateY(0)' },
         },
-        'glow-pulse': {
-          '0%, 100%': { opacity: '0.3' },
-          '50%': { opacity: '0.8' },
+        'subtle-pulse': {
+          '0%, 100%': { opacity: '1' },
+          '50%':      { opacity: '0.5' },
         },
       },
       animation: {
-        'fade-up': 'fade-up 0.5s ease-out both',
-        'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
+        'fade-up':      'fade-up 0.2s cubic-bezier(0.16,1,0.3,1) both',
+        'subtle-pulse': 'subtle-pulse 2s ease infinite',
       },
     },
   },

@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #09090b;
+      --card:         #09090b;
+      --card-border:  #27272a;
+      --popover:      #18181b;
+      --primary:      #fafafa;
+      --primary-fg:   #18181b;
+      --secondary:    #27272a;
+      --secondary-fg: #fafafa;
+      --muted:        #27272a;
+      --muted-fg:     #a1a1aa;
+      --accent:       #27272a;
+      --accent-fg:    #fafafa;
+      --destructive:  #7f1d1d;
+      --destructive-fg: #fafafa;
+      --border:       #27272a;
+      --input:        #27272a;
+      --ring:         #d4d4d8;
+      --fg:           #fafafa;
+      --radius:       0.5rem;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 420px;
+      margin: 0 auto;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    /* ── Titlebar ── */
+    .titlebar {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+      -webkit-app-region: drag;
+      flex-shrink: 0;
+    }
+    .traffic { display: flex; gap: 6px; -webkit-app-region: no-drag; }
+    .tc { width: 12px; height: 12px; border-radius: 50%; border: none; cursor: pointer; }
+    .tc.cl { background: #ff5f57; }
+    .tc.mn { background: #febc2e; }
+    .tc.mx { background: #28c840; }
+    .wordmark {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--fg);
+      letter-spacing: -0.01em;
+    }
+    .tb-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+    /* badge inline */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted-fg);
+      white-space: nowrap;
+    }
+    .badge .bdot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--muted-fg);
+      flex-shrink: 0;
+    }
+    .badge.success {
+      border-color: #166534;
+      color: #4ade80;
+      background: rgba(22,101,52,0.15);
+    }
+    .badge.success .bdot {
+      background: #4ade80;
+      box-shadow: 0 0 0 2px rgba(74,222,128,0.2);
+      animation: bdot-pulse 2s ease infinite;
+    }
+    @keyframes bdot-pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+    /* ── Body ── */
+    .body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .body::-webkit-scrollbar { width: 4px; }
+    .body::-webkit-scrollbar-track { background: transparent; }
+    .body::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 99px; }
+
+    /* ── Card ── */
+    .card {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--card);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .card-desc {
+      font-size: 12px;
+      color: var(--muted-fg);
+      margin-top: 1px;
+    }
+    .card-content { padding: 14px 16px; }
+    .card-row {
+      display: flex;
+      align-items: center;
+      padding: 11px 16px;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-row:last-child { border-bottom: none; }
+
+    /* ── Separator ── */
+    .sep { height: 1px; background: var(--border); }
+
+    /* ── Avatar ── */
+    .avatar {
+      width: 36px; height: 36px;
+      border-radius: calc(var(--radius) - 2px);
+      background: var(--secondary);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    /* ── Labels ── */
+    .label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted-fg);
+    }
+    .value {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--fg);
+    }
+    .mono {
+      font-family: 'GeistMono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted-fg);
+      padding: 0 2px;
+    }
+
+    /* ── Spec grid ── */
+    .spec-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .sg-cell {
+      padding: 10px 16px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .sg-cell:nth-child(2n) { border-right: none; }
+    .sg-cell:nth-last-child(-n+2) { border-bottom: none; }
+    .sg-k { font-size: 11px; color: var(--muted-fg); font-weight: 500; }
+    .sg-v { font-size: 13px; font-weight: 500; color: var(--fg); margin-top: 2px; }
+
+    /* ── Progress ── */
+    .progress-track {
+      height: 6px;
+      background: var(--secondary);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: var(--primary);
+      transition: width 0.4s ease;
+    }
+    .progress-fill.green { background: #4ade80; }
+
+    /* ── Step list ── */
+    .step-list { display: flex; flex-direction: column; }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .step-item:last-child { border-bottom: none; }
+    .step-icon {
+      width: 18px; height: 18px;
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-icon.done {
+      background: rgba(74,222,128,0.1);
+      border-color: rgba(74,222,128,0.3);
+    }
+    .step-icon.cur {
+      border-color: var(--ring);
+    }
+    .step-label { font-size: 13px; flex: 1; }
+    .step-label code {
+      font-family: monospace;
+      font-size: 12px;
+      background: var(--secondary);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--fg);
+    }
+    .step-time { font-size: 11px; color: var(--muted-fg); }
+    .step-item.pending { opacity: 0.4; }
+
+    /* ── Spinner ── */
+    .spin {
+      width: 10px; height: 10px;
+      border: 1.5px solid var(--border);
+      border-top-color: var(--fg);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Stat tiles ── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+    .stat-cell {
+      background: var(--card);
+      padding: 12px 16px;
+    }
+    .sc-k { font-size: 11px; color: var(--muted-fg); font-weight: 500; }
+    .sc-v { font-size: 18px; font-weight: 600; margin-top: 2px; line-height: 1; }
+    .sc-u { font-size: 11px; color: var(--muted-fg); font-weight: 400; }
+
+    /* ── Util rows ── */
+    .util-list { display: flex; flex-direction: column; gap: 12px; }
+    .util-item { display: flex; flex-direction: column; gap: 5px; }
+    .util-row { display: flex; justify-content: space-between; align-items: baseline; }
+    .util-name { font-size: 12px; color: var(--muted-fg); font-weight: 500; }
+    .util-val { font-size: 12px; color: var(--fg); font-weight: 500; }
+
+    /* ── Model list ── */
+    .model-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .model-row:last-child { border-bottom: none; }
+    .model-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+      flex-shrink: 0;
+    }
+    .model-name { font-size: 13px; flex: 1; }
+    .model-size { font-size: 11px; color: var(--muted-fg); }
+
+    /* ── Tunnel bar ── */
+    .tunnel-bar {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      gap: 10px;
+    }
+    .tunnel-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+    .tn-icon {
+      width: 28px; height: 28px;
+      border-radius: calc(var(--radius) - 2px);
+      background: var(--secondary);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tn-label { font-size: 10px; color: var(--muted-fg); font-weight: 500; }
+    .tunnel-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .tunnel-line-fill {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--primary);
+      transform: translateX(-100%);
+    }
+    .tunnel-line-fill.active {
+      animation: tunnel-flow 1.8s ease-in-out infinite;
+    }
+    @keyframes tunnel-flow {
+      0%   { transform: translateX(-100%); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { transform: translateX(100%); opacity: 0; }
+    }
+    .tunnel-line-solid {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      transition: background 0.4s;
+    }
+    .tunnel-line-solid.lit { background: #27272a; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      width: 100%;
+    }
+    .btn:active { opacity: 0.85; }
+    .btn-primary {
+      background: var(--primary);
+      color: var(--primary-fg);
+      border-color: transparent;
+    }
+    .btn-primary:hover { background: #e4e4e7; }
+    .btn-outline {
+      background: transparent;
+      color: var(--fg);
+      border-color: var(--border);
+    }
+    .btn-outline:hover { background: var(--accent); }
+    .btn-destructive-outline {
+      background: transparent;
+      color: #f87171;
+      border-color: #3f1e1e;
+    }
+    .btn-destructive-outline:hover { background: rgba(239,68,68,0.05); }
+    .btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ── Ghost row (add peer) ── */
+    .ghost-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      border: 1px dashed var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .ghost-row:hover { background: var(--accent); }
+    .ghost-row span { font-size: 13px; color: var(--muted-fg); font-weight: 500; }
+
+    /* ── Demo bar ── */
+    .demo-bar {
+      display: flex; gap: 4px;
+      padding: 8px 12px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .db {
+      flex: 1; padding: 5px;
+      border-radius: calc(var(--radius) - 2px);
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted-fg);
+      font-size: 11px; font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+    .db:hover { background: var(--accent); color: var(--fg); }
+    .db.on { background: var(--secondary); color: var(--fg); border-color: var(--ring); }
+
+    /* ── Fade ── */
+    .fade { animation: fadeUp 0.18s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Titlebar -->
+  <div class="titlebar">
+    <div class="traffic">
+      <button class="tc cl"></button>
+      <button class="tc mn"></button>
+      <button class="tc mx"></button>
+    </div>
+    <span class="wordmark">Coop</span>
+    <div class="tb-right">
+      <div class="badge" id="tbBadge">
+        <span class="bdot"></span>
+        <span id="tbText">Disconnected</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body" id="body"></div>
+
+  <!-- Demo bar -->
+  <div class="demo-bar">
+    <button class="db on" onclick="go('idle')">Idle</button>
+    <button class="db" onclick="go('connecting')">Connecting</button>
+    <button class="db" onclick="go('connected')">Connected</button>
+  </div>
+</div>
+
+<script>
+let uptimeTimer = null;
+let uptimeStart = null;
+
+function fmt(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  return m > 0 ? `${m}m ${s % 60}s` : `${s}s`;
+}
+
+function go(state) {
+  clearInterval(uptimeTimer);
+
+  document.querySelectorAll('.db').forEach((b, i) =>
+    b.classList.toggle('on', ['idle','connecting','connected'][i] === state)
+  );
+
+  const badge = document.getElementById('tbBadge');
+  const text  = document.getElementById('tbText');
+  badge.className = 'badge' + (state === 'connected' ? ' success' : '');
+  text.textContent = state === 'connected' ? 'Connected' : state === 'connecting' ? 'Connecting…' : 'Disconnected';
+
+  document.getElementById('body').innerHTML = VIEWS[state]();
+
+  if (state === 'connecting') {
+    let w = 30;
+    const iv = setInterval(() => {
+      w = Math.min(w + Math.random() * 3, 65);
+      const el = document.getElementById('cprog');
+      if (!el) { clearInterval(iv); return; }
+      el.style.width = w + '%';
+    }, 250);
+  }
+
+  if (state === 'connected') {
+    uptimeStart = Date.now();
+    uptimeTimer = setInterval(() => {
+      const el = document.getElementById('uptime');
+      if (el) el.textContent = fmt(Date.now() - uptimeStart);
+    }, 1000);
+  }
+}
+
+const VIEWS = {
+
+  idle: () => `
+    <div class="fade" style="display:flex;flex-direction:column;gap:12px">
+
+      <p class="section-label">Your machine</p>
+      <div class="card">
+        <div class="card-row">
+          <div class="tn-icon" style="width:36px;height:36px;border-radius:6px">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="3" width="12" height="9" rx="1.5"/><path d="M5 12v1M11 12v1M4 14h8"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="value">MacBook Pro M3</div>
+            <div class="label">Local machine</div>
+          </div>
+          <div class="badge success"><span class="bdot"></span>Online</div>
+        </div>
+      </div>
+
+      <p class="section-label">Friends</p>
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;gap:10px;padding:12px 16px">
+          <div class="avatar">J</div>
+          <div style="flex:1">
+            <div class="card-title">Jake</div>
+            <div class="card-desc">localhost:11434 · RTX 4090</div>
+          </div>
+          <div class="badge success"><span class="bdot"></span>Online</div>
+        </div>
+        <div class="spec-grid">
+          <div class="sg-cell"><div class="sg-k">GPU</div><div class="sg-v">RTX 4090</div></div>
+          <div class="sg-cell"><div class="sg-k">VRAM</div><div class="sg-v">24 GB</div></div>
+          <div class="sg-cell"><div class="sg-k">CUDA</div><div class="sg-v">12.4</div></div>
+          <div class="sg-cell"><div class="sg-k">RAM</div><div class="sg-v">64 GB</div></div>
+        </div>
+      </div>
+
+      <div class="ghost-row" style="cursor:pointer">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+        <span>Add a friend</span>
+      </div>
+
+      <button class="btn btn-primary" onclick="go('connecting')" style="margin-top:4px">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M5.5 10.5l-2.5 2.5M11 5l2.5-2.5M9 9.5L6.5 7"/>
+          <path d="M4 6.5a3 3 0 0 1 4.24 0"/><path d="M7.76 9.5a3 3 0 0 0 4.24 0"/>
+        </svg>
+        Connect to Jake
+      </button>
+    </div>
+  `,
+
+  connecting: () => `
+    <div class="fade" style="display:flex;flex-direction:column;gap:12px">
+
+      <div class="card">
+        <div class="tunnel-bar">
+          <div class="tunnel-node">
+            <div class="tn-icon">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="3" width="12" height="9" rx="1.5"/><path d="M5 12v1M11 12v1M4 14h8"/></svg>
+            </div>
+            <span class="tn-label">You</span>
+          </div>
+          <div class="tunnel-line">
+            <div class="tunnel-line-solid"></div>
+            <div class="tunnel-line-fill"></div>
+          </div>
+          <div class="tunnel-node">
+            <div class="tn-icon">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="1" y="3" width="14" height="10" rx="1.5"/><path d="M4 7h8M4 9.5h5"/></svg>
+            </div>
+            <span class="tn-label">Jake</span>
+          </div>
+        </div>
+        <div style="padding:0 16px 14px">
+          <div class="progress-track">
+            <div class="progress-fill" id="cprog" style="width:30%"></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="section-label">Progress</p>
+      <div class="card">
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-icon done">
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round"><path d="M1.5 4l2 2 3-3"/></svg>
+            </div>
+            <span class="step-label">Authenticated with Jake's machine</span>
+            <span class="step-time">38ms</span>
+          </div>
+          <div class="step-item">
+            <div class="step-icon cur"><div class="spin"></div></div>
+            <span class="step-label">Forwarding <code>:11434</code> → local</span>
+            <span class="step-time">—</span>
+          </div>
+          <div class="step-item pending">
+            <div class="step-icon"></div>
+            <span class="step-label">Verify Ollama endpoint</span>
+            <span class="step-time">—</span>
+          </div>
+          <div class="step-item pending">
+            <div class="step-icon"></div>
+            <span class="step-label">Sync available models</span>
+            <span class="step-time">—</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-outline" disabled>
+        <div class="spin" style="width:12px;height:12px;border-width:2px"></div>
+        Connecting…
+      </button>
+    </div>
+  `,
+
+  connected: () => `
+    <div class="fade" style="display:flex;flex-direction:column;gap:12px">
+
+      <div class="card">
+        <div class="tunnel-bar">
+          <div class="tunnel-node">
+            <div class="tn-icon">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="3" width="12" height="9" rx="1.5"/><path d="M5 12v1M11 12v1M4 14h8"/></svg>
+            </div>
+            <span class="tn-label">You</span>
+          </div>
+          <div class="tunnel-line">
+            <div class="tunnel-line-solid lit"></div>
+            <div class="tunnel-line-fill active"></div>
+          </div>
+          <div class="tunnel-node">
+            <div class="tn-icon">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="1" y="3" width="14" height="10" rx="1.5"/><path d="M4 7h8M4 9.5h5"/></svg>
+            </div>
+            <span class="tn-label">Jake</span>
+          </div>
+        </div>
+        <div class="sep"></div>
+        <div class="stat-row">
+          <div class="stat-cell">
+            <div class="sc-k">Latency</div>
+            <div class="sc-v">12<span class="sc-u">ms</span></div>
+          </div>
+          <div class="stat-cell">
+            <div class="sc-k">Uptime</div>
+            <div class="sc-v" id="uptime">0s</div>
+          </div>
+          <div class="stat-cell">
+            <div class="sc-k">Port</div>
+            <div class="sc-v">11434</div>
+          </div>
+        </div>
+      </div>
+
+      <p class="section-label">GPU status</p>
+      <div class="card">
+        <div class="card-content">
+          <div class="util-list">
+            <div class="util-item">
+              <div class="util-row">
+                <span class="util-name">Utilization</span>
+                <span class="util-val">18%</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill green" style="width:18%"></div></div>
+            </div>
+            <div class="util-item">
+              <div class="util-row">
+                <span class="util-name">VRAM</span>
+                <span class="util-val">4.1 / 24 GB</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill green" style="width:17%"></div></div>
+            </div>
+            <div class="util-item">
+              <div class="util-row">
+                <span class="util-name">Temperature</span>
+                <span class="util-val">58°C</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill" style="width:38%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="section-label">Available models</p>
+      <div class="card">
+        ${[['llama3:70b','40.4 GB'],['mistral:7b','4.1 GB'],['codellama:34b','19.1 GB']].map(([n,s]) => `
+          <div class="model-row">
+            <div class="model-dot"></div>
+            <span class="model-name">${n}</span>
+            <span class="model-size">${s}</span>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="card">
+        <div class="card-row" style="border-bottom:none">
+          <div style="flex:1">
+            <div class="label">Bridged to</div>
+            <div class="value mono" style="margin-top:2px">localhost:11434</div>
+          </div>
+          <div class="badge success"><span class="bdot"></span>Live</div>
+        </div>
+      </div>
+
+      <button class="btn btn-destructive-outline" onclick="go('idle')">
+        Disconnect
+      </button>
+    </div>
+  `
+};
+
+go('idle');
+</script>
+</body>
+</html>
