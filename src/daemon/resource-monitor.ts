@@ -136,6 +136,7 @@ export class ResourceMonitor extends EventEmitter {
 
     return {
       peerId: this.peerId,
+      hostname: os.hostname(),
       gpuModel: gpu?.model ?? 'CPU only',
       totalVramMb: gpu?.totalVramMb ?? 0,
       availableVramMb: gpu ? gpu.totalVramMb - gpu.usedVramMb : 0,

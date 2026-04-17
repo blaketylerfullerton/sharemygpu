@@ -15,19 +15,21 @@ export function getMainWindow(): BrowserWindow | null {
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
-    width: 1100,
-    height: 750,
-    minWidth: 800,
-    minHeight: 600,
+    width: 440,
+    height: 660,
+    minWidth: 440,
+    maxWidth: 440,
+    minHeight: 500,
     title: 'GPU Co-op',
-    backgroundColor: '#0f172a',
+    backgroundColor: '#09090b',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
     show: false,
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    titleBarStyle: 'hiddenInset',
+    trafficLightPosition: { x: 16, y: 13 },
   });
 
   mainWindow.once('ready-to-show', () => {

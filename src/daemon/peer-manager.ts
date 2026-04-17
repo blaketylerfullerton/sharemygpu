@@ -197,7 +197,7 @@ export class PeerManager extends EventEmitter {
     // Update peer in DB with fresh hardware info
     upsertPeer({
       peerId,
-      displayName: peerId.slice(0, 8),
+      displayName: resource.hostname || peerId.slice(0, 8),
       gpuModel: resource.gpuModel,
       totalVramMb: resource.totalVramMb,
       totalRamMb: resource.totalRamMb,

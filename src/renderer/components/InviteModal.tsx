@@ -53,15 +53,13 @@ export function InviteModal({ onClose }: Props) {
     setLoading(true);
     setError('');
     try {
-      const result = await invoke<{ groupId: string; inviteCode: string }>(
-        IPC.GROUP_CREATE
-      );
+      const result = await invoke<{ groupId: string; inviteCode: string }>(IPC.GROUP_CREATE);
       if (result?.inviteCode) {
         setGeneratedCode(result.inviteCode);
         const group = await invoke<Group>(IPC.GROUP_GET);
         if (group) setGroup(group);
       }
-    } catch (e) {
+    } catch {
       setError('Failed to create group. Is the daemon running?');
     } finally {
       setLoading(false);
@@ -84,7 +82,7 @@ export function InviteModal({ onClose }: Props) {
       } else {
         setError(result?.error ?? 'Failed to join group');
       }
-    } catch (e) {
+    } catch {
       setError('Failed to join group');
     } finally {
       setLoading(false);
@@ -122,72 +120,97 @@ export function InviteModal({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(6, 8, 13, 0.8)', backdropFilter: 'blur(8px)' }}>
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 50,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)',
+      }}
+    >
       <div
-        className="w-full max-w-md mx-4 rounded-xl p-6 relative animate-fade-up"
         style={{
-          background: '#161b22',
-          border: '1px solid #21262d',
-          boxShadow: '0 24px 80px rgba(0, 0, 0, 0.5)',
+          width: '100%', maxWidth: 360, margin: '0 16px',
+          background: '#09090b',
+          border: '1px solid #27272a',
+          borderRadius: 12,
+          padding: 20,
+          position: 'relative',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
         }}
       >
-        {/* Accent line at top */}
-        <div
-          className="absolute top-0 left-6 right-6 h-[1px]"
-          style={{ background: 'linear-gradient(90deg, transparent, #58e6d9, transparent)' }}
-        />
-
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="page-title text-lg">
-            {mode === 'direct' ? 'Connect on LAN' : 'Join a Pool'}
-          </h2>
-          <button onClick={onClose} className="btn-ghost p-1.5 rounded-lg">
-            <X size={18} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#fafafa' }}>
+            {mode === 'direct' ? 'Connect on LAN' : 'Add a Friend'}
+          </span>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: '#52525b', padding: 4, display: 'flex', alignItems: 'center',
+              borderRadius: 6, transition: 'color 0.12s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#a1a1aa')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#52525b')}
+          >
+            <X size={15} />
           </button>
         </div>
 
+        {/* ── choose ── */}
         {mode === 'choose' && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <button
                 onClick={() => { setMode('create'); handleCreate(); }}
-                className="flex flex-col items-center gap-3 p-5 rounded-xl transition-all duration-200"
-                style={{ background: '#1c2128', border: '1px solid #21262d' }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#58e6d9'; e.currentTarget.style.boxShadow = '0 0 20px rgba(88, 230, 217, 0.06)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#21262d'; e.currentTarget.style.boxShadow = 'none'; }}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                  padding: '16px 12px', borderRadius: 10,
+                  background: '#18181b', border: '1px solid #27272a',
+                  cursor: 'pointer', transition: 'border-color 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = '#3f3f46')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = '#27272a')}
               >
-                <Users size={28} style={{ color: '#58e6d9' }} />
-                <div className="text-center">
-                  <div className="font-display font-semibold text-sm" style={{ color: '#e6edf3' }}>Create Group</div>
-                  <div className="font-mono text-[10px] mt-0.5" style={{ color: '#484f58' }}>start a new pool</div>
+                <Users size={22} color="#71717a" />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#fafafa', fontFamily: 'inherit' }}>Create Group</div>
+                  <div style={{ fontSize: 10, color: '#52525b', marginTop: 2, fontFamily: 'Geist Mono, ui-monospace, monospace' }}>start a new pool</div>
                 </div>
               </button>
               <button
                 onClick={() => setMode('join')}
-                className="flex flex-col items-center gap-3 p-5 rounded-xl transition-all duration-200"
-                style={{ background: '#1c2128', border: '1px solid #21262d' }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#39d353'; e.currentTarget.style.boxShadow = '0 0 20px rgba(57, 211, 83, 0.06)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#21262d'; e.currentTarget.style.boxShadow = 'none'; }}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                  padding: '16px 12px', borderRadius: 10,
+                  background: '#18181b', border: '1px solid #27272a',
+                  cursor: 'pointer', transition: 'border-color 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = '#3f3f46')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = '#27272a')}
               >
-                <LogIn size={28} style={{ color: '#39d353' }} />
-                <div className="text-center">
-                  <div className="font-display font-semibold text-sm" style={{ color: '#e6edf3' }}>Join Group</div>
-                  <div className="font-mono text-[10px] mt-0.5" style={{ color: '#484f58' }}>enter invite code</div>
+                <LogIn size={22} color="#71717a" />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#fafafa', fontFamily: 'inherit' }}>Join Group</div>
+                  <div style={{ fontSize: 10, color: '#52525b', marginTop: 2, fontFamily: 'Geist Mono, ui-monospace, monospace' }}>enter invite code</div>
                 </div>
               </button>
             </div>
             <button
               onClick={() => setMode('direct')}
-              className="flex items-center gap-3 w-full p-4 rounded-xl transition-all duration-200"
-              style={{ background: '#1c2128', border: '1px solid #21262d' }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#58a6ff'; e.currentTarget.style.boxShadow = '0 0 20px rgba(88, 166, 255, 0.06)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#21262d'; e.currentTarget.style.boxShadow = 'none'; }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '12px 14px', borderRadius: 10,
+                background: '#18181b', border: '1px solid #27272a',
+                cursor: 'pointer', transition: 'border-color 0.15s', width: '100%',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = '#3f3f46')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = '#27272a')}
             >
-              <Wifi size={22} style={{ color: '#58a6ff' }} />
-              <div className="text-left">
-                <div className="font-display font-semibold text-sm" style={{ color: '#e6edf3' }}>Connect on LAN</div>
-                <div className="font-mono text-[10px] mt-0.5" style={{ color: '#484f58' }}>
+              <Wifi size={18} color="#71717a" />
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#fafafa', fontFamily: 'inherit' }}>Connect on LAN</div>
+                <div style={{ fontSize: 10, color: '#52525b', marginTop: 2, fontFamily: 'Geist Mono, ui-monospace, monospace' }}>
                   enter another machine's IP directly
                 </div>
               </div>
@@ -195,59 +218,105 @@ export function InviteModal({ onClose }: Props) {
           </div>
         )}
 
+        {/* ── create ── */}
         {mode === 'create' && (
           <div>
             {loading && !generatedCode && (
-              <div className="text-center py-8 font-mono text-sm" style={{ color: '#7d8590' }}>
+              <div style={{ textAlign: 'center', padding: '24px 0', fontSize: 12, color: '#71717a', fontFamily: 'Geist Mono, ui-monospace, monospace' }}>
                 Creating group...
               </div>
             )}
             {generatedCode && (
               <div>
-                <p className="text-sm mb-4" style={{ color: '#7d8590' }}>
+                <p style={{ fontSize: 12, color: '#71717a', marginBottom: 14, lineHeight: 1.5 }}>
                   Share this code with friends. It expires in 24 hours.
                 </p>
-                <div className="flex items-center gap-2 mb-5">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                   <code
-                    className="flex-1 text-center text-2xl font-mono tracking-[0.25em] py-3 rounded-lg"
-                    style={{ background: '#0d1117', border: '1px solid #21262d', color: '#58e6d9' }}
+                    style={{
+                      flex: 1, textAlign: 'center',
+                      fontSize: 20, letterSpacing: '0.2em',
+                      fontFamily: 'Geist Mono, ui-monospace, monospace',
+                      padding: '12px 0', borderRadius: 8,
+                      background: '#18181b', border: '1px solid #27272a',
+                      color: '#fafafa', display: 'block',
+                    }}
                   >
                     {generatedCode}
                   </code>
-                  <button onClick={copyCode} className="btn-secondary">
-                    {copied ? <Check size={16} style={{ color: '#39d353' }} /> : <Copy size={16} />}
+                  <button
+                    onClick={copyCode}
+                    style={{
+                      padding: '10px 12px', borderRadius: 8,
+                      background: '#18181b', border: '1px solid #27272a',
+                      color: copied ? '#4ade80' : '#a1a1aa',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center',
+                      transition: 'color 0.15s', flexShrink: 0,
+                    }}
+                  >
+                    {copied ? <Check size={15} /> : <Copy size={15} />}
                   </button>
                 </div>
-                <button onClick={onClose} className="btn-primary w-full">
+                <button
+                  onClick={onClose}
+                  style={{
+                    width: '100%', padding: '9px 0', borderRadius: 8,
+                    background: '#fafafa', border: 'none', color: '#09090b',
+                    fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
                   Done
                 </button>
               </div>
             )}
+            {error && <p style={{ fontSize: 12, color: '#f87171', marginTop: 12 }}>{error}</p>}
           </div>
         )}
 
+        {/* ── join ── */}
         {mode === 'join' && (
           <div>
-            <p className="text-sm mb-4" style={{ color: '#7d8590' }}>
+            <p style={{ fontSize: 12, color: '#71717a', marginBottom: 14, lineHeight: 1.5 }}>
               Enter the invite code from your friend to join their pool.
             </p>
             <input
-              className="input mb-3 text-center text-lg tracking-[0.2em] uppercase font-mono"
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                padding: '10px 12px', borderRadius: 8, marginBottom: 10,
+                background: '#18181b', border: '1px solid #27272a',
+                color: '#fafafa', fontSize: 16, letterSpacing: '0.18em',
+                textAlign: 'center', textTransform: 'uppercase',
+                fontFamily: 'Geist Mono, ui-monospace, monospace',
+                outline: 'none',
+              }}
               placeholder="ABC-XYZ-123"
               value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value)}
+              onChange={e => setInviteCode(e.target.value)}
               maxLength={12}
-              onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
+              onKeyDown={e => e.key === 'Enter' && handleJoin()}
             />
-            {error && <p className="text-sm mb-3" style={{ color: '#f85149' }}>{error}</p>}
-            <div className="flex gap-2">
-              <button onClick={() => setMode('choose')} className="btn-secondary flex-1">
+            {error && <p style={{ fontSize: 12, color: '#f87171', marginBottom: 10 }}>{error}</p>}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setMode('choose')}
+                style={{
+                  flex: 1, padding: '9px 0', borderRadius: 8,
+                  background: 'transparent', border: '1px solid #27272a',
+                  color: '#a1a1aa', fontSize: 13, fontWeight: 500,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
                 Back
               </button>
               <button
                 onClick={handleJoin}
-                className="btn-primary flex-1"
                 disabled={loading || !inviteCode.trim()}
+                style={{
+                  flex: 1, padding: '9px 0', borderRadius: 8,
+                  background: '#fafafa', border: 'none', color: '#09090b',
+                  fontSize: 13, fontWeight: 600, cursor: loading || !inviteCode.trim() ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit', opacity: loading || !inviteCode.trim() ? 0.4 : 1,
+                }}
               >
                 {loading ? 'Joining...' : 'Join Pool'}
               </button>
@@ -255,66 +324,87 @@ export function InviteModal({ onClose }: Props) {
           </div>
         )}
 
+        {/* ── direct ── */}
         {mode === 'direct' && (
           <div>
-            <p className="text-sm mb-4" style={{ color: '#7d8590' }}>
+            <p style={{ fontSize: 12, color: '#71717a', marginBottom: 14, lineHeight: 1.5 }}>
               Enter the IP address of another GPU Co-op machine on your network.
             </p>
             <input
-              className="input mb-3 font-mono"
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                padding: '10px 12px', borderRadius: 8, marginBottom: 10,
+                background: '#18181b', border: '1px solid #27272a',
+                color: '#fafafa', fontSize: 13,
+                fontFamily: 'Geist Mono, ui-monospace, monospace',
+                outline: 'none',
+              }}
               placeholder="192.168.1.42  or  192.168.1.42:50051"
               value={directAddress}
-              onChange={(e) => setDirectAddress(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleDirectConnect()}
+              onChange={e => setDirectAddress(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleDirectConnect()}
               autoFocus
             />
             {localAddresses.length > 0 && (
               <div
-                className="mb-3 p-3 rounded-lg"
-                style={{ background: '#0d1117', border: '1px solid #21262d' }}
+                style={{
+                  marginBottom: 10, padding: '10px 12px', borderRadius: 8,
+                  background: '#18181b', border: '1px solid #27272a',
+                }}
               >
-                <div className="font-mono text-[10px] mb-1.5" style={{ color: '#484f58' }}>
+                <div style={{ fontSize: 10, color: '#52525b', marginBottom: 6, fontFamily: 'Geist Mono, ui-monospace, monospace' }}>
                   YOUR LAN IP (share with the other machine):
                 </div>
-                <div className="font-mono text-sm" style={{ color: '#58a6ff' }}>
-                  {localAddresses.map((a) => `${a}:50051`).join('  •  ')}
+                <div style={{ fontSize: 12, color: '#a1a1aa', fontFamily: 'Geist Mono, ui-monospace, monospace' }}>
+                  {localAddresses.map(a => `${a}:50051`).join('  ·  ')}
                 </div>
               </div>
             )}
-            <p className="font-mono text-[10px] mb-3" style={{ color: '#484f58' }}>
+            <p style={{ fontSize: 10, color: '#52525b', marginBottom: 12, fontFamily: 'Geist Mono, ui-monospace, monospace', lineHeight: 1.5 }}>
               Both machines must have the app running. Allow incoming connections if prompted.
             </p>
             {error && (
               <div
-                className="mb-3 p-3 rounded-lg"
-                style={{ background: 'rgba(248, 81, 73, 0.06)', border: '1px solid rgba(248, 81, 73, 0.15)' }}
+                style={{
+                  marginBottom: 12, padding: '10px 12px', borderRadius: 8,
+                  background: 'rgba(248,113,113,0.05)', border: '1px solid rgba(248,113,113,0.15)',
+                }}
               >
-                <p className="text-sm font-semibold mb-1.5" style={{ color: '#f85149' }}>{error}</p>
-                <ul className="font-mono text-[10px] space-y-0.5 list-disc list-inside" style={{ color: 'rgba(248, 81, 73, 0.7)' }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: '#f87171', marginBottom: 6 }}>{error}</p>
+                <ul style={{ fontSize: 10, color: 'rgba(248,113,113,0.6)', fontFamily: 'Geist Mono, ui-monospace, monospace', paddingLeft: 14, lineHeight: 1.7, margin: 0 }}>
                   <li>Both machines must have GPU Co-op running</li>
                   <li>Allow incoming connections if a firewall prompt appears</li>
                   <li>Verify both machines are on the same local network</li>
                 </ul>
               </div>
             )}
-            {success && <p className="text-sm mb-3" style={{ color: '#39d353' }}>{success}</p>}
-            <div className="flex gap-2">
-              <button onClick={() => setMode('choose')} className="btn-secondary flex-1">
+            {success && <p style={{ fontSize: 12, color: '#4ade80', marginBottom: 12 }}>{success}</p>}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setMode('choose')}
+                style={{
+                  flex: 1, padding: '9px 0', borderRadius: 8,
+                  background: 'transparent', border: '1px solid #27272a',
+                  color: '#a1a1aa', fontSize: 13, fontWeight: 500,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
                 Back
               </button>
               <button
                 onClick={handleDirectConnect}
-                className="btn-primary flex-1"
                 disabled={loading || !directAddress.trim()}
+                style={{
+                  flex: 1, padding: '9px 0', borderRadius: 8,
+                  background: '#fafafa', border: 'none', color: '#09090b',
+                  fontSize: 13, fontWeight: 600, cursor: loading || !directAddress.trim() ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit', opacity: loading || !directAddress.trim() ? 0.4 : 1,
+                }}
               >
                 {loading ? 'Connecting...' : 'Connect'}
               </button>
             </div>
           </div>
-        )}
-
-        {error && mode === 'create' && (
-          <p className="text-sm mt-3" style={{ color: '#f85149' }}>{error}</p>
         )}
       </div>
     </div>

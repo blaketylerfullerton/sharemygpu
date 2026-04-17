@@ -20,6 +20,7 @@ export interface Peer {
 
 export interface ResourceStatus {
   peerId: string;
+  hostname: string;
   gpuModel: string;
   totalVramMb: number;
   availableVramMb: number;

@@ -335,7 +335,7 @@ async function startup(): Promise<void> {
   // Register local peer
   const resource = resourceMonitor.getLatest();
   peerManager.registerLocalPeer({
-    displayName: settings.displayName,
+    displayName: settings.displayName === 'My Machine' ? os.hostname() : settings.displayName,
     gpuModel: resource?.gpuModel,
     totalVramMb: resource?.totalVramMb,
     totalRamMb: resource?.totalRamMb,

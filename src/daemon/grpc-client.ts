@@ -183,6 +183,7 @@ export class GrpcClient extends EventEmitter {
   private protoToResource(msg: any): ResourceStatus {
     return {
       peerId: msg.peerId || '',
+      hostname: msg.hostname || '',
       gpuModel: msg.gpuModel || 'Unknown',
       totalVramMb: msg.totalVramMb || 0,
       availableVramMb: msg.availableVramMb || 0,
